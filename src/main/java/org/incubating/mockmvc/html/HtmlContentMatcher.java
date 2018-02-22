@@ -31,7 +31,6 @@ public class HtmlContentMatcher implements ResultMatcher {
         return this;
     }
 
-
     public HtmlContentMatcher document(DocumentMatcher documentMatcher) {
         documentMatchers.add(documentMatcher);
         return this;
@@ -42,6 +41,7 @@ public class HtmlContentMatcher implements ResultMatcher {
         return this;
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"}) // not really possible to tell java that this works
     public HtmlContentMatcher eachElement(String cssSelector, Matcher<? super Element> eachElementMatcher) {
         Matcher matcher = CoreMatchers.everyItem(eachElementMatcher);
         documentMatchers.add(new ElementsMatcher(cssSelector, matcher));

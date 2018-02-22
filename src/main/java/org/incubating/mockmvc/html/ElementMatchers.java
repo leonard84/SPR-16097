@@ -4,14 +4,11 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
 
@@ -68,63 +65,9 @@ public class ElementMatchers {
                 description -> description.appendText("element value ").appendDescriptionOf(matcher));
     }
 
-    private static class ElementPropertyMatcher<T> extends TypeSafeDiagnosingMatcher<Element> {
-
-        private final Function<Element, T> extractor;
-
-        private final Matcher<T> matcher;
-
-        private final Consumer<Description> description;
-
+    private static class ElementPropertyMatcher<T> extends PropertyMatcher<Element, T> {
         ElementPropertyMatcher(Function<Element, T> extractor, Matcher<T> matcher, Consumer<Description> description) {
-            this.extractor = extractor;
-            this.matcher = matcher;
-            this.description = description;
-        }
-
-
-        @Override
-        protected boolean matchesSafely(Element item, Description mismatchDescription) {
-            T subject = extractor.apply(item);
-            boolean matches = matcher.matches(subject);
-            if (!matches) {
-                matcher.describeMismatch(subject, mismatchDescription);
-            }
-            return matches;
-        }
-
-        @Override
-        public void describeTo(Description description) {
-            this.description.accept(description);
-        }
-    }
-
-    private static class PredicateMatcher<T> extends TypeSafeDiagnosingMatcher<T> {
-        private final Predicate<T> predicate;
-
-        private final Consumer<Description> description;
-        private final BiConsumer<T, Description> mismatchDescription;
-
-        private PredicateMatcher(Predicate<T> predicate, Consumer<Description> description, BiConsumer<T, Description>
-                mismatchDescription) {
-            this.predicate = predicate;
-            this.description = description;
-            this.mismatchDescription = mismatchDescription;
-        }
-
-
-        @Override
-        public void describeTo(Description description) {
-            this.description.accept(description);
-        }
-
-        @Override
-        protected boolean matchesSafely(T item, Description mismatchDescription) {
-            boolean match = predicate.test(item);
-            if (!match) {
-                this.mismatchDescription.accept(item, mismatchDescription);
-            }
-            return match;
+            super(description, extractor, matcher);
         }
     }
 }

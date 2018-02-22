@@ -1,6 +1,7 @@
 package org.incubating.mockmvc.html;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.incubating.mockmvc.html.DocumentMatchers.hasTitle;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -8,6 +9,8 @@ import java.util.Collections;
 
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matcher;
+import org.hamcrest.MatcherAssert;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -24,6 +27,14 @@ public class MatcherTest {
     public static void setupClass() throws IOException {
         html = StreamUtils.copyToString(MatcherTest.class.getResourceAsStream("/templates/index.html"),
                 Charset.forName("UTF-8"));
+    }
+
+    @Test
+    public void single_element_matcher_does_fails_when_more_than_one_elements_are_found() {
+        String error = singleElement("input", ElementMatchers.hasValue("irrelevant"));
+        assertThat(error).isEqualTo("Single or null Element expected for \"input\"\n"
+                + "Expected: is a value less than <2>\n"
+                + "     but: <5> was greater than <2>");
     }
 
     @Test
@@ -53,9 +64,22 @@ public class MatcherTest {
                 + "     but: attribute value was \"hidden\"");
     }
 
+
+    @Test
+    public void document_title_matcher() {
+        String error = document(hasTitle("foobar"));
+        assertThat(error).isEqualTo("\n"
+                + "Expected: document has title \"foobar\"\n"
+                + "     but: was \"Demo\"");
+    }
+
     private String singleElement(String cssSelector, Matcher<Element> elementMatcher) {
         DocumentMatcher matcher = new SingleElementMatcher(cssSelector, elementMatcher);
         return assertMessage(matcher);
+    }
+
+    private String document(Matcher<Document> matcher) {
+        return assertMessage(document -> MatcherAssert.assertThat(document, matcher));
     }
 
     private String assertMessage(DocumentMatcher matcher) {
@@ -64,7 +88,7 @@ public class MatcherTest {
         } catch (AssertionError e) {
             return e.getMessage();
         }
-        Assert.fail("Matcher did not fail");
+        Assert.fail("Matcher did not fail as expected");
         return null;
     }
 }

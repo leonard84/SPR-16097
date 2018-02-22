@@ -18,7 +18,7 @@ public class SingleElementMatcher extends ElementMatcher {
     @Override
     public void match(Document document) {
         Elements select = document.select(getCss());
-        assertThat("Single or null Element expected", select.size(), is(lessThan(2)));
+        assertThat("Single or null Element expected for \"" + getCss() + '"', select.size(), is(lessThan(2)));
         assertThat(select.first(), this);
     }
 
