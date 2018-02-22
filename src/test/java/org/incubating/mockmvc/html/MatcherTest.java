@@ -1,0 +1,70 @@
+package org.incubating.mockmvc.html;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.Collections;
+
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.Matcher;
+import org.jsoup.nodes.Element;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.springframework.util.StreamUtils;
+
+public class MatcherTest {
+
+    protected static final String FORM_INPUT_NAME_CSRF = "form input[name=_csrf]";
+
+    private static String html;
+
+    @BeforeClass
+    public static void setupClass() throws IOException {
+        html = StreamUtils.copyToString(MatcherTest.class.getResourceAsStream("/templates/index.html"),
+                Charset.forName("UTF-8"));
+    }
+
+    @Test
+    public void single_element_value_string_matcher() {
+        String error = singleElement(FORM_INPUT_NAME_CSRF, ElementMatchers.hasValue("5ee91155"));
+        assertThat(error).isEqualTo("\n"
+                + "Expected: a single element selected by \"form input[name=_csrf]\" matching element value \"5ee91155\"\n"
+                + "     but: was \"5ee91155-9809-4630-81a5-47d478eccd11\"");
+    }
+
+    @Test
+    public void single_element_value_matcher() {
+        String error = singleElement(FORM_INPUT_NAME_CSRF, ElementMatchers.hasValue(CoreMatchers.endsWith("5ee91155")));
+        assertThat(error).isEqualTo("\n"
+                + "Expected: a single element selected by \"form input[name=_csrf]\" matching element value a string ending "
+                + "with \"5ee91155\"\n"
+                + "     but: was \"5ee91155-9809-4630-81a5-47d478eccd11\"");
+    }
+
+
+    @Test
+    public void single_element_attribute_matcher() {
+        String error = singleElement(FORM_INPUT_NAME_CSRF, ElementMatchers.hasAttribute("type", "text"));
+        assertThat(error).isEqualTo("\n"
+                + "Expected: a single element selected by \"form input[name=_csrf]\" matching element attributes has attribute "
+                + "\"type\" with value \"text\"\n"
+                + "     but: attribute value was \"hidden\"");
+    }
+
+    private String singleElement(String cssSelector, Matcher<Element> elementMatcher) {
+        DocumentMatcher matcher = new SingleElementMatcher(cssSelector, elementMatcher);
+        return assertMessage(matcher);
+    }
+
+    private String assertMessage(DocumentMatcher matcher) {
+        try {
+            new JsoupMatcher(Collections.singletonList(matcher)).match(html);
+        } catch (AssertionError e) {
+            return e.getMessage();
+        }
+        Assert.fail("Matcher did not fail");
+        return null;
+    }
+}
