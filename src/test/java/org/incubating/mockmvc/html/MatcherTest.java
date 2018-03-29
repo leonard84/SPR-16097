@@ -30,11 +30,13 @@ public class MatcherTest {
     }
 
     @Test
-    public void single_element_matcher_does_fails_when_more_than_one_elements_are_found() {
+    public void single_element_matcher_does_fail_when_more_than_one_elements_are_found() {
         String error = singleElement("input", ElementMatchers.hasValue("irrelevant"));
-        assertThat(error).isEqualTo("Single or null Element expected for \"input\"\n"
-                + "Expected: is a value less than <2>\n"
-                + "     but: <5> was greater than <2>");
+        assertThat(error).isEqualTo("Single or null Element expected for \"input\", but found <4>:\n"
+                + "html > body > div.content > form > input\n"
+                + "#exampleInputName\n"
+                + "#exampleInputEmail\n"
+                + "#exampleInputPassword");
     }
 
     @Test
@@ -54,7 +56,6 @@ public class MatcherTest {
                 + "     but: was \"5ee91155-9809-4630-81a5-47d478eccd11\"");
     }
 
-
     @Test
     public void single_element_attribute_matcher() {
         String error = singleElement(FORM_INPUT_NAME_CSRF, ElementMatchers.hasAttribute("type", "text"));
@@ -64,6 +65,23 @@ public class MatcherTest {
                 + "     but: attribute value was \"hidden\"");
     }
 
+    @Test
+    public void single_element_text_matcher() {
+        String error = singleElement("h1", ElementMatchers.hasText("Demo"));
+        assertThat(error).isEqualTo("\n"
+                + "Expected: a single element selected by \"h1\" matching text \"Demo\"\n"
+                + "     but: was \"This is a Demo site\"");
+    }
+
+    @Test
+    public void single_element_data_matcher() {
+        String error = singleElement("script", ElementMatchers.hasData(CoreMatchers.containsString("csrf_token")));
+        assertThat(error).isEqualTo("\n"
+                + "Expected: a single element selected by \"script\" matching data a string containing \"csrf_token\"\n"
+                + "     but: was \"\n"
+                + "        var xsrf_token = \"5ee91155-9809-4630-81a5-47d478eccd11\";\n"
+                + "    \"");
+    }
 
     @Test
     public void document_title_matcher() {

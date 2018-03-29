@@ -3,7 +3,9 @@ package org.incubating.spring.mockmvchtmlmatcher;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.hasSize;
+import static org.incubating.mockmvc.html.DocumentMatchers.hasTitle;
 import static org.incubating.mockmvc.html.ElementMatchers.hasCssClass;
+import static org.incubating.mockmvc.html.ElementMatchers.predicate;
 import static org.incubating.mockmvc.html.HtmlContentMatcher.html;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -16,6 +18,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.util.StringUtils;
 
 @RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
@@ -33,7 +36,7 @@ public class MatcherIT {
     @Test
     public void form_contains_a_csrf_token_hidden_field_jsoup() throws Exception {
         mockMvc.perform(get("/"))
-                .andExpect(html().anElement( "form input[name=_csrf]", notNullValue(Element.class)));
+                .andExpect(html().anElement("form input[name=_csrf]", notNullValue(Element.class)));
     }
 
     @Test
@@ -42,10 +45,38 @@ public class MatcherIT {
                 .andExpect(html().elements("form input[type=submit], form button[type=submit]", hasSize(1)));
     }
 
+    @Test
+    public void form_every_non_hidden_input_has_the_correct_class() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(html().eachElement("form input:not([type=hidden])", hasCssClass("form-control")));
+    }
 
     @Test
-    public void form_every_input_has_the_correct_class() throws Exception {
+    public void form_every_non_hidden_input_has_corresponding_label() throws Exception {
         mockMvc.perform(get("/"))
-                .andExpect(html().eachElement("form input", hasCssClass("form-control")));
+                .andExpect(html().eachElement("form input:not([type=hidden])", predicate(
+                        element -> StringUtils.hasText(element.id())
+                                        && element.parent().selectFirst("label[for=" + element.id() + "]") != null,
+                        description -> description.appendText("an input with corresponding label"),
+                        (element, description) -> description.appendText("element ").appendValue(element.cssSelector())
+                                .appendText(" does not have a corresponding label.")
+                )));
+    }
+
+    @Test
+    public void document_title() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(html().document(hasTitle("Demo")));
+    }
+
+    @Test
+    public void multiple_assertions_combined() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(html()
+                        .document(hasTitle("Demo"))
+                        .anElement("form input[name=_csrf]", notNullValue(Element.class))
+                        .elements("form input[type=submit], form button[type=submit]", hasSize(1))
+                        .eachElement("form input:not([type=hidden])", hasCssClass("form-control"))
+                );
     }
 }

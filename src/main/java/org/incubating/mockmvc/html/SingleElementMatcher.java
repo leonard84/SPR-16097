@@ -1,8 +1,8 @@
 package org.incubating.mockmvc.html;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.lessThan;
+
+import java.util.stream.Collectors;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -18,7 +18,13 @@ public class SingleElementMatcher extends ElementMatcher {
     @Override
     public void match(Document document) {
         Elements select = document.select(getCss());
-        assertThat("Single or null Element expected for \"" + getCss() + '"', select.size(), is(lessThan(2)));
+        if (select.size() > 1) {
+            throw new AssertionError(
+                    String.format("Single or null Element expected for \"%s\", but found <%d>:\n%s",
+                            getCss(),
+                            select.size(),
+                            select.stream().map(Element::cssSelector).collect(Collectors.joining("\n"))));
+        }
         assertThat(select.first(), this);
     }
 

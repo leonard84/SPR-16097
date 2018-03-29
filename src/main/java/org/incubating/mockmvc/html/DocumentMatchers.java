@@ -10,6 +10,7 @@ import org.hamcrest.Matcher;
 import org.jsoup.nodes.Document;
 
 public class DocumentMatchers {
+    private DocumentMatchers(){}
 
     public static Matcher<Document> hasTitle(String value) {
         return hasTitle(equalTo(value));

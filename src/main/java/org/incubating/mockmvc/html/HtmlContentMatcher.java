@@ -5,7 +5,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matcher;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -41,10 +40,8 @@ public class HtmlContentMatcher implements ResultMatcher {
         return this;
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"}) // not really possible to tell java that this works
     public HtmlContentMatcher eachElement(String cssSelector, Matcher<? super Element> eachElementMatcher) {
-        Matcher matcher = CoreMatchers.everyItem(eachElementMatcher);
-        documentMatchers.add(new ElementsMatcher(cssSelector, matcher));
+        documentMatchers.add(new ElementsMatcher(cssSelector, new EachElementMatcher(eachElementMatcher)));
         return this;
     }
 
