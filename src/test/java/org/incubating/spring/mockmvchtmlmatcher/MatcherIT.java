@@ -3,7 +3,10 @@ package org.incubating.spring.mockmvchtmlmatcher;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.hasSize;
+import static org.incubating.mockmvc.html.DocumentAssertions.elements;
 import static org.incubating.mockmvc.html.DocumentMatchers.hasTitle;
+import static org.incubating.mockmvc.html.DocumentAssertions.anElement;
+import static org.incubating.mockmvc.html.DocumentAssertions.eachElement;
 import static org.incubating.mockmvc.html.ElementMatchers.hasCssClass;
 import static org.incubating.mockmvc.html.ElementMatchers.predicate;
 import static org.incubating.mockmvc.html.HtmlContentMatcher.html;
@@ -36,19 +39,34 @@ public class MatcherIT {
     @Test
     public void form_contains_a_csrf_token_hidden_field_jsoup() throws Exception {
         mockMvc.perform(get("/"))
-                .andExpect(html().anElement("form input[name=_csrf]", notNullValue(Element.class)));
+                .andExpect(html()
+                        .anElement("form input[name=_csrf]", notNullValue(Element.class))
+                        .document(anElement("form input[name=_csrf]").exists()));
     }
 
     @Test
     public void form_has_a_submit_button() throws Exception {
         mockMvc.perform(get("/"))
-                .andExpect(html().elements("form input[type=submit], form button[type=submit]", hasSize(1)));
+                .andExpect(html()
+                        .elements("form input[type=submit], form button[type=submit]", hasSize(1))
+                        .document(elements("form input[type=submit], form button[type=submit]").hasCount(1))
+                );
     }
 
     @Test
     public void form_every_non_hidden_input_has_the_correct_class() throws Exception {
         mockMvc.perform(get("/"))
-                .andExpect(html().eachElement("form input:not([type=hidden])", hasCssClass("form-control")));
+                .andExpect(html()
+                        .eachElement("form input:not([type=hidden])", hasCssClass("form-control"))
+                        .document(eachElement("form input:not([type=hidden])").hasCssClass("form-control")));
+    }
+
+
+    @Test
+    public void form_every_non_hidden_input_has_the_correct_class_alternative() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(html()
+                        .document(elements("form input:not([type=hidden])").hasCount(3).each().hasCssClass("form-control")));
     }
 
     @Test
@@ -56,7 +74,7 @@ public class MatcherIT {
         mockMvc.perform(get("/"))
                 .andExpect(html().eachElement("form input:not([type=hidden])", predicate(
                         element -> StringUtils.hasText(element.id())
-                                        && element.parent().selectFirst("label[for=" + element.id() + "]") != null,
+                                && element.parent().selectFirst("label[for=" + element.id() + "]") != null,
                         description -> description.appendText("an input with corresponding label"),
                         (element, description) -> description.appendText("element ").appendValue(element.cssSelector())
                                 .appendText(" does not have a corresponding label.")
